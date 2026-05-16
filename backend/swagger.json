@@ -1,0 +1,2016 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Nexus Academy API",
+        "description": "Comprehensive OpenAPI 3.0 documentation for the Nexus Academy backend. This API handles user authentication, course management, enrollments, lessons, reviews, certificates, and instructor earnings. Authentication is handled via JWT tokens stored in cookies.",
+        "version": "1.0.0",
+        "contact": {
+            "name": "API Support",
+            "email": "support@nexusacademy.com"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:4000/api",
+            "description": "Local development server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Endpoints for user registration, login, and session management."
+        },
+        {
+            "name": "Users",
+            "description": "Endpoints for managing user profiles and administrative user actions."
+        },
+        {
+            "name": "Categories",
+            "description": "Endpoints for managing course categories."
+        },
+        {
+            "name": "Courses",
+            "description": "Endpoints for course discovery, creation, and detailed management."
+        },
+        {
+            "name": "Sections",
+            "description": "Endpoints for organizing courses into structural sections."
+        },
+        {
+            "name": "Lessons",
+            "description": "Endpoints for managing individual lessons and tracking student progress."
+        },
+        {
+            "name": "Enrollments",
+            "description": "Endpoints for handling course purchases and student enrollment lists."
+        },
+        {
+            "name": "Reviews",
+            "description": "Endpoints for student feedback and course ratings."
+        },
+        {
+            "name": "Certificates",
+            "description": "Endpoints for issuing, viewing, and verifying course completion certificates."
+        },
+        {
+            "name": "Earnings",
+            "description": "Endpoints for instructors to track their financial performance."
+        },
+        {
+            "name": "Media",
+            "description": "Endpoints for handling file uploads (images/videos) and secure streaming."
+        },
+        {
+            "name": "Payments",
+            "description": "Endpoints for handling Stripe payments and webhooks."
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "token",
+                "description": "JWT token stored in a secure, httpOnly cookie named 'token'."
+            }
+        },
+        "schemas": {
+            "SuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": {
+                        "type": "string",
+                        "example": "Operation completed successfully."
+                    },
+                    "data": { "type": "object", "nullable": true }
+                }
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": {
+                        "type": "string",
+                        "example": "A detailed error message describing what went wrong."
+                    }
+                }
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "example": 1
+                    },
+                    "first_name": { "type": "string", "example": "John" },
+                    "last_name": { "type": "string", "example": "Doe" },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": ["user", "instructor", "admin"],
+                        "example": "user"
+                    },
+                    "avatar_url": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "1abc123_xyz"
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Full Stack Developer"
+                    },
+                    "bio": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "I love building scalable web applications."
+                    },
+                    "is_verified": { "type": "boolean", "example": true },
+                    "created_at": { "type": "string", "format": "date-time" }
+                }
+            },
+            "Category": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "example": 5
+                    },
+                    "name": { "type": "string", "example": "Data Science" }
+                }
+            },
+            "Course": {
+                "type": "object",
+                "properties": {
+                    "course_id": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "example": 101
+                    },
+                    "category_id": { "type": "integer", "example": 5 },
+                    "instructor_id": { "type": "integer", "example": 10 },
+                    "title": {
+                        "type": "string",
+                        "example": "Introduction to Machine Learning"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Learn the basics of ML with Python."
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 19.99
+                    },
+                    "original_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 49.99
+                    },
+                    "thumbnail_url": {
+                        "type": "string",
+                        "example": "1_thumbnail_id"
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": ["Beginner", "Intermediate", "Advanced"],
+                        "example": "Beginner"
+                    },
+                    "is_available": { "type": "boolean", "example": true },
+                    "rating": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.8
+                    },
+                    "duration": { "type": "integer", "example": 18000 }
+                }
+            },
+            "Section": {
+                "type": "object",
+                "properties": {
+                    "course_id": { "type": "integer", "example": 101 },
+                    "section_order": { "type": "integer", "example": 1 },
+                    "title": { "type": "string", "example": "Getting Started" }
+                }
+            },
+            "Lesson": {
+                "type": "object",
+                "properties": {
+                    "course_id": { "type": "integer", "example": 101 },
+                    "section_order": { "type": "integer", "example": 1 },
+                    "lesson_order": { "type": "integer", "example": 1 },
+                    "title": { "type": "string", "example": "Variables" },
+                    "description": {
+                        "type": "string",
+                        "example": "Learn about variables."
+                    },
+                    "video_url": { "type": "string", "example": "1_video_id" },
+                    "duration": { "type": "integer", "example": 600 }
+                }
+            },
+            "Review": {
+                "type": "object",
+                "properties": {
+                    "user_id": { "type": "integer", "example": 1 },
+                    "course_id": { "type": "integer", "example": 101 },
+                    "rating": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5,
+                        "example": 5
+                    },
+                    "comment": { "type": "string", "example": "Great course!" }
+                }
+            },
+            "Enrollment": {
+                "type": "object",
+                "properties": {
+                    "user_id": { "type": "integer", "example": 1 },
+                    "course_id": { "type": "integer", "example": 101 },
+                    "enrolled_at": { "type": "string", "format": "date-time" },
+                    "payment_method": { "type": "string", "example": "card" },
+                    "enrollment_cost": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 19.99
+                    }
+                }
+            },
+            "Certificate": {
+                "type": "object",
+                "properties": {
+                    "certificate_id": {
+                        "type": "string",
+                        "example": "uuid-string"
+                    },
+                    "user_id": { "type": "integer", "example": 1 },
+                    "course_id": { "type": "integer", "example": 101 },
+                    "issued_at": { "type": "string", "format": "date-time" }
+                }
+            }
+        },
+        "responses": {
+            "Unauthorized": {
+                "description": "Unauthorized - JWT token is missing or invalid",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "Forbidden - Insufficient permissions",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Resource not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "BadRequest": {
+                "description": "Bad Request - Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "security": [{ "cookieAuth": [] }],
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Register a new user",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "email",
+                                    "password",
+                                    "confirm_password"
+                                ],
+                                "properties": {
+                                    "first_name": { "type": "string" },
+                                    "last_name": { "type": "string" },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "confirm_password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "avatar": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/BadRequest" }
+                }
+            }
+        },
+        "/auth/verify-otp": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Verify OTP",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email", "otp"],
+                                "properties": {
+                                    "email": { "type": "string" },
+                                    "otp": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/BadRequest" }
+                }
+            }
+        },
+        "/auth/resend-otp": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Resend OTP",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email"],
+                                "properties": { "email": { "type": "string" } }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP resent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Login",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email", "password"],
+                                "properties": {
+                                    "email": { "type": "string" },
+                                    "password": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Logged in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "description": "Invalid credentials" }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "Logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Request password reset OTP",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email"],
+                                "properties": { "email": { "type": "string" } }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "OTP sent if user exists" }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Reset password using OTP",
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "otp",
+                                    "new_password",
+                                    "confirm_password"
+                                ],
+                                "properties": {
+                                    "email": { "type": "string" },
+                                    "otp": { "type": "string" },
+                                    "new_password": { "type": "string" },
+                                    "confirm_password": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Password reset successful" }
+                }
+            }
+        },
+        "/auth/google": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "Initiate Google OAuth login",
+                "security": [],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to Google login page"
+                    }
+                }
+            }
+        },
+        "/auth/google/callback": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "Google OAuth callback",
+                "security": [],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to frontend with token set in cookie"
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "Get current user",
+                "responses": {
+                    "200": {
+                        "description": "User profile",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "$ref": "#/components/responses/Unauthorized" }
+                }
+            }
+        },
+        "/auth/change-password": {
+            "put": {
+                "tags": ["Auth"],
+                "summary": "Change password",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "old_password",
+                                    "new_password",
+                                    "confirm_password"
+                                ],
+                                "properties": {
+                                    "old_password": { "type": "string" },
+                                    "new_password": { "type": "string" },
+                                    "confirm_password": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Password changed" }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "Get all users (Admin)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of users per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Column to sort by",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "FirstName",
+                                "LastName",
+                                "Email",
+                                "Role",
+                                "Time"
+                            ],
+                            "default": "Time",
+                            "example": "Time"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["ASC", "DESC"],
+                            "default": "ASC",
+                            "example": "DESC"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated user list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "limit": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 100
+                                        },
+                                        "pages": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": { "$ref": "#/components/responses/Forbidden" }
+                }
+            }
+        },
+        "/users/best-instructors": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "Get top rated instructors",
+                "security": [],
+                "responses": {
+                    "200": { "description": "List of instructors" }
+                }
+            }
+        },
+        "/users/{user_id}": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "Get user by ID",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "User found" },
+                    "404": { "$ref": "#/components/responses/NotFound" }
+                }
+            },
+            "put": {
+                "tags": ["Users"],
+                "summary": "Update user",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "first_name": { "type": "string" },
+                                    "last_name": { "type": "string" },
+                                    "title": { "type": "string" },
+                                    "bio": { "type": "string" },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": ["user", "instructor", "admin"]
+                                    },
+                                    "avatar": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "User updated" }
+                }
+            },
+            "delete": {
+                "tags": ["Users"],
+                "summary": "Delete user (Admin)",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "User deleted" }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "tags": ["Categories"],
+                "summary": "Get categories",
+                "security": [],
+                "responses": {
+                    "200": { "description": "Category list" }
+                }
+            },
+            "post": {
+                "tags": ["Categories"],
+                "summary": "Create category (Admin)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": { "name": { "type": "string" } }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": { "description": "Category created" }
+                }
+            }
+        },
+        "/categories/{category_id}": {
+            "get": {
+                "tags": ["Categories"],
+                "summary": "Get category",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Category details" }
+                }
+            },
+            "put": {
+                "tags": ["Categories"],
+                "summary": "Update category (Admin)",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": { "name": { "type": "string" } }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Category updated" }
+                }
+            },
+            "delete": {
+                "tags": ["Categories"],
+                "summary": "Delete category (Admin)",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Category deleted" }
+                }
+            }
+        },
+        "/courses": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get courses",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["Beginner", "Intermediate", "Advanced"]
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Column to sort by",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Title",
+                                "Price",
+                                "Rating",
+                                "Duration",
+                                "Time"
+                            ],
+                            "default": "Time"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["ASC", "DESC"],
+                            "default": "ASC"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Course list" }
+                }
+            },
+            "post": {
+                "tags": ["Courses"],
+                "summary": "Create course (Instructor)",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "category_id",
+                                    "title",
+                                    "description",
+                                    "original_price",
+                                    "level"
+                                ],
+                                "properties": {
+                                    "category_id": { "type": "integer" },
+                                    "title": { "type": "string" },
+                                    "description": { "type": "string" },
+                                    "price": { "type": "number" },
+                                    "original_price": { "type": "number" },
+                                    "level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Beginner",
+                                            "Intermediate",
+                                            "Advanced"
+                                        ]
+                                    },
+                                    "thumbnail": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": { "description": "Course created" }
+                }
+            }
+        },
+        "/courses/my": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get my courses (Instructor)",
+                "responses": {
+                    "200": { "description": "List of courses" }
+                }
+            }
+        },
+        "/courses/instructor/{instructor_id}": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get courses by instructor ID",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "instructor_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of courses" }
+                }
+            }
+        },
+        "/courses/{course_id}": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get course",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Course details" }
+                }
+            },
+            "put": {
+                "tags": ["Courses"],
+                "summary": "Update course",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "category_id": { "type": "integer" },
+                                    "title": { "type": "string" },
+                                    "description": { "type": "string" },
+                                    "price": { "type": "number" },
+                                    "original_price": { "type": "number" },
+                                    "level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Beginner",
+                                            "Intermediate",
+                                            "Advanced"
+                                        ]
+                                    },
+                                    "thumbnail": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Course updated" }
+                }
+            },
+            "delete": {
+                "tags": ["Courses"],
+                "summary": "Delete course",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Course deleted" }
+                }
+            }
+        },
+        "/courses/{course_id}/content": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get course content (curriculum)",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Curriculum" }
+                }
+            }
+        },
+        "/courses/{course_id}/sections": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get all sections of a course",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of sections" }
+                }
+            }
+        },
+        "/courses/{course_id}/enrollments": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get enrollments for a course (Instructor/Admin)",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["Time", "User", "Cost"],
+                            "default": "Time"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["ASC", "DESC"],
+                            "default": "DESC"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of enrollments" }
+                }
+            }
+        },
+        "/courses/{course_id}/reviews": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get course reviews",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["Rating", "Time"],
+                            "default": "Rating"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["ASC", "DESC"],
+                            "default": "DESC"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of reviews" }
+                }
+            }
+        },
+        "/courses/{course_id}/stats": {
+            "get": {
+                "tags": ["Courses"],
+                "summary": "Get course analytics/stats (Instructor/Admin)",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Course stats" }
+                }
+            }
+        },
+        "/sections": {
+            "post": {
+                "tags": ["Sections"],
+                "summary": "Create section",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "course_id",
+                                    "section_order",
+                                    "title"
+                                ],
+                                "properties": {
+                                    "course_id": { "type": "integer" },
+                                    "section_order": { "type": "integer" },
+                                    "title": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": { "description": "Section created" }
+                }
+            }
+        },
+        "/sections/{course_id}/{section_order}": {
+            "put": {
+                "tags": ["Sections"],
+                "summary": "Update section",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "section_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["title"],
+                                "properties": { "title": { "type": "string" } }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Section updated" }
+                }
+            },
+            "delete": {
+                "tags": ["Sections"],
+                "summary": "Delete section",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "section_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Section deleted" }
+                }
+            }
+        },
+        "/lessons": {
+            "post": {
+                "tags": ["Lessons"],
+                "summary": "Create lesson",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "course_id",
+                                    "section_order",
+                                    "lesson_order",
+                                    "title"
+                                ],
+                                "properties": {
+                                    "course_id": { "type": "integer" },
+                                    "section_order": { "type": "integer" },
+                                    "lesson_order": { "type": "integer" },
+                                    "title": { "type": "string" },
+                                    "description": { "type": "string" },
+                                    "video": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": { "description": "Lesson created" }
+                }
+            }
+        },
+        "/lessons/{course_id}/{section_order}/{lesson_order}": {
+            "get": {
+                "tags": ["Lessons"],
+                "summary": "Get lesson",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "section_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "lesson_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Lesson details" }
+                }
+            },
+            "put": {
+                "tags": ["Lessons"],
+                "summary": "Update lesson",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "section_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "lesson_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": { "type": "string" },
+                                    "description": { "type": "string" },
+                                    "video": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Lesson updated" }
+                }
+            },
+            "delete": {
+                "tags": ["Lessons"],
+                "summary": "Delete lesson",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "section_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "lesson_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Lesson deleted" }
+                }
+            }
+        },
+        "/lessons/{course_id}/{section_order}/{lesson_order}/complete": {
+            "post": {
+                "tags": ["Lessons"],
+                "summary": "Mark lesson complete",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "section_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "lesson_order",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "Marked complete" }
+                }
+            }
+        },
+        "/enrollments": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get all enrollments (Admin)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of all enrollments" }
+                }
+            },
+            "post": {
+                "tags": ["Enrollments"],
+                "summary": "Enroll in a course",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["course_id"],
+                                "properties": {
+                                    "course_id": { "type": "integer" },
+                                    "payment_method": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": { "description": "Enrolled" }
+                }
+            },
+            "delete": {
+                "tags": ["Enrollments"],
+                "summary": "Admin or Instructor unenroll a user",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["course_id", "user_id"],
+                                "properties": {
+                                    "course_id": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 46
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User unenrolled successfully"
+                    }
+                }
+            }
+        },
+        "/enrollments/my": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get my enrollments",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["Time", "Course", "Cost"],
+                            "default": "Time"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["ASC", "DESC"],
+                            "default": "DESC"
+                        }
+                    }
+                ],
+                "responses": { "200": { "description": "List" } }
+            }
+        },
+        "/enrollments/instructor": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get enrollments for an instructor's courses",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of enrollments" }
+                }
+            }
+        },
+        "/enrollments/instructor/students": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get unique students for an instructor (Instructor)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 100 }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of students with their progress and enrolled courses"
+                    },
+                    "403": { "$ref": "#/components/responses/Forbidden" }
+                }
+            }
+        },
+        "/enrollments/progress/{course_id}": {
+            "get": {
+                "tags": ["Enrollments"],
+                "summary": "Get progress in a course",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "Progress" } }
+            }
+        },
+        "/reviews": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get all reviews (Admin)",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    },
+                    {
+                        "name": "course_id",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of all reviews" }
+                }
+            }
+        },
+        "/reviews/instructor": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get reviews for an instructor's courses",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 1 }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 10 }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of reviews" }
+                }
+            }
+        },
+        "/reviews/best": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get top rated reviews",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "default": 4 }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "List of best reviews" }
+                }
+            }
+        },
+        "/reviews/{course_id}": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get reviews for a course",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "List of reviews" } }
+            },
+            "post": {
+                "tags": ["Reviews"],
+                "summary": "Create review",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["rating", "comment"],
+                                "properties": {
+                                    "rating": { "type": "integer" },
+                                    "comment": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": { "201": { "description": "Created" } }
+            },
+            "put": {
+                "tags": ["Reviews"],
+                "summary": "Update review",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "Updated" } }
+            },
+            "delete": {
+                "tags": ["Reviews"],
+                "summary": "Delete review",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "Deleted" } }
+            }
+        },
+        "/reviews/{course_id}/me": {
+            "get": {
+                "tags": ["Reviews"],
+                "summary": "Get my review for a course",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "Review" } }
+            }
+        },
+        "/certificates": {
+            "get": {
+                "tags": ["Certificates"],
+                "summary": "Get my certificates",
+                "responses": { "200": { "description": "List" } }
+            }
+        },
+        "/certificates/{course_id}": {
+            "get": {
+                "tags": ["Certificates"],
+                "summary": "Get certificate",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "HTML Certificate" },
+                    "403": { "$ref": "#/components/responses/Forbidden" },
+                    "404": { "$ref": "#/components/responses/NotFound" }
+                }
+            }
+        },
+        "/certificates/verify/{certificate_id}": {
+            "get": {
+                "tags": ["Certificates"],
+                "summary": "Verify certificate",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "certificate_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": { "200": { "description": "Valid" } }
+            }
+        },
+        "/certificates/download/{course_id}": {
+            "get": {
+                "tags": ["Certificates"],
+                "summary": "Download certificate as PDF",
+                "parameters": [
+                    {
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": { "200": { "description": "PDF" } }
+            }
+        },
+        "/earnings": {
+            "get": {
+                "tags": ["Earnings"],
+                "summary": "Get earnings (Instructor/Admin)",
+                "responses": { "200": { "description": "List" } }
+            }
+        },
+        "/earnings/analytics": {
+            "get": {
+                "tags": ["Earnings"],
+                "summary": "Get earnings analytics (Instructor/Admin)",
+                "responses": { "200": { "description": "Analytics" } }
+            }
+        },
+        "/payments/create-checkout-session": {
+            "post": {
+                "tags": ["Payments"],
+                "summary": "Create a Stripe Checkout session",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["course_id"],
+                                "properties": {
+                                    "course_id": {
+                                        "type": "integer",
+                                        "example": 101
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sessionId": {
+                                                    "type": "string"
+                                                },
+                                                "url": { "type": "string" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "$ref": "#/components/responses/BadRequest" },
+                    "404": { "$ref": "#/components/responses/NotFound" }
+                }
+            }
+        },
+        "/payments/webhook": {
+            "post": {
+                "tags": ["Payments"],
+                "summary": "Stripe Webhook handler",
+                "security": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": { "type": "object" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Webhook received" },
+                    "400": { "description": "Webhook error" }
+                }
+            }
+        },
+        "/media": {
+            "post": {
+                "tags": ["Media"],
+                "summary": "Upload media (Admin/Instructor)",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["file"],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": { "201": { "description": "Uploaded" } }
+            }
+        },
+        "/media/{fileId}": {
+            "get": {
+                "tags": ["Media"],
+                "summary": "Stream media",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": { "200": { "description": "Stream" } }
+            },
+            "delete": {
+                "tags": ["Media"],
+                "summary": "Delete media (Admin/Instructor)",
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": { "200": { "description": "Deleted" } }
+            }
+        }
+    }
+}

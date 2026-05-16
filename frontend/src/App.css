@@ -1,0 +1,4 @@
+/* Root styles removed to allow full-page layouts to function correctly */
+#root {
+  width: 100%;
+}

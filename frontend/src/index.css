@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 195 33% 95%;
+    --foreground: 200 60% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 60% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 60% 10%;
+
+    --primary: 193 85% 27%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 180 30% 59%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 195 33% 92%;
+    --muted-foreground: 200 10% 40%;
+
+    --accent: 180 30% 59%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 195 20% 88%;
+    --input: 195 20% 88%;
+    --ring: 193 85% 27%;
+
+    --radius: 0.75rem;
+
+    --shadow-card: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-elevated: 0 8px 24px rgba(0,0,0,0.12);
+    --shadow-hover: 0 12px 32px rgba(0,0,0,0.14);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 200 60% 10%;
+    --sidebar-primary: 193 85% 27%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 195 33% 95%;
+    --sidebar-accent-foreground: 200 60% 10%;
+    --sidebar-border: 195 20% 88%;
+    --sidebar-ring: 193 85% 27%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    height: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    height: 100%;
+    overflow: hidden; /* Lock the body */
+    overscroll-behavior: none;
+  }
+
+  #root {
+    height: 100%;
+  }
+
+  .dark {
+    --background: 200 60% 6%;
+    --foreground: 195 33% 95%;
+    --card: 200 50% 10%;
+    --card-foreground: 195 33% 95%;
+    --popover: 200 50% 10%;
+    --popover-foreground: 195 33% 95%;
+    --primary: 193 70% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 30% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 200 40% 15%;
+    --muted-foreground: 195 15% 60%;
+    --accent: 180 30% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 30% 18%;
+    --input: 200 30% 18%;
+    --ring: 193 70% 40%;
+    --sidebar-background: 200 50% 8%;
+    --sidebar-foreground: 195 33% 95%;
+    --sidebar-primary: 193 70% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 40% 15%;
+    --sidebar-accent-foreground: 195 33% 95%;
+    --sidebar-border: 200 30% 18%;
+    --sidebar-ring: 193 70% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Global Catchy Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1 { @apply text-4xl font-bold tracking-tight; }
+  h2 { @apply text-3xl font-bold tracking-tight; }
+  h3 { @apply text-2xl font-semibold; }
+}
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  .elevated-shadow {
+    box-shadow: var(--shadow-elevated);
+  }
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(193 85% 27%), hsl(180 30% 59%));
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(193 85% 27%), hsl(180 30% 59%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
